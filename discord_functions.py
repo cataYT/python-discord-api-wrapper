@@ -1,33 +1,31 @@
 import requests
 import json
+import dotenv
 
-BOT_TOKEN = "TOKEN_HERE"
+dotenv.load_dotenv()
 
-def send_message(message, channelID=1098207196505968690, auth=BOT_TOKEN):
+BOT_TOKEN = dotenv.dotenv_values(".env").get("BOT_TOKEN")
+
+HEADERS = {
+    "authorization": BOT_TOKEN
+}
+
+def send_message(message, channelID=1098207196505968690):
     url = f"https://discord.com/api/v9/channels/{channelID}/messages"
     body = {   
         "content": message,
         "tts": False, # text to speech
     }
-    headers = {
-        "Authorization": auth
-    }
-    result = requests.post(url, json=body, headers=headers).content.decode("utf-8")
+    result = requests.post(url, json=body, headers=HEADERS).content.decode("utf-8")
     return json.loads(result)
 
-def delete_message(messageID, channelID=1098207196505968690, auth=BOT_TOKEN):
+def delete_message(messageID, channelID=1098207196505968690):
     url = f"https://discord.com/api/v9/channels/{channelID}/messages/{messageID}"
-    headers = {
-        "authorization": auth,
-    }
-    return requests.delete(url=url, headers=headers)
+    return requests.delete(url=url, headers=HEADERS)
 
 def get_user_info(userID=925772708883615754, serverID=1119538529450594314, auth=BOT_TOKEN): # bot cannot do this
     url = f"https://discord.com/api/v9/users/{userID}/profile?with_mutual_guilds=true&with_mutual_friends=false&with_mutual_friends_count=false&guild_id={serverID}"
-    headers = {
-        "authorization": auth,
-    }
-    result = requests.get(url=url, headers=headers).content.decode("utf-8")
+    result = requests.get(url=url, headers=HEADERS).content.decode("utf-8")
     return json.loads(result)
 
 def login(token=BOT_TOKEN):
@@ -45,10 +43,10 @@ def login(token=BOT_TOKEN):
         print(f'Failed to log in: {response.status_code} - {response.text}')
         return None
     
-def create_channel(name, serverID, parentID=None, auth=BOT_TOKEN):
+def create_channel(name, serverID, parentID=None):
     url = f"https://discord.com/api/v9/guilds/{serverID}/channels"
     headers = {
-        "authorization": auth,
+        "authorization": BOT_TOKEN,
         "content-type": "application/json"
     }
     body = {
@@ -60,21 +58,41 @@ def create_channel(name, serverID, parentID=None, auth=BOT_TOKEN):
     result = requests.post(url=url, json=body, headers=headers).content.decode("utf-8")
     return json.loads(result)
 
-def delete_channel(channelID, auth=BOT_TOKEN):
+def delete_channel(channelID):
     url = f"https://discord.com/api/v9/channels/{channelID}"
-    headers = {
-        "authorization": auth
-    }
-    result = requests.delete(url=url, headers=headers).content.decode("utf-8")
+    result = requests.delete(url=url, headers=HEADERS).content.decode("utf-8")
     return json.loads(result)
 
-def update_roles(roles, userID, serverID, auth=BOT_TOKEN):
+def update_roles(roles, userID, serverID):
     url = f"https://discord.com/api/v9/guilds/{serverID}/members/{userID}"
-    header = {
-        "authorization": auth
-    }
     body = {
         "roles": roles
     }
-    result = requests.patch(url=url, headers=header, json=body).content.decode("utf-8")
+    result = requests.patch(url=url, headers=HEADERS, json=body).content.decode("utf-8")
     return json.loads(result)
+
+def get_members_info(serverID, limit=250):
+    url = f"https://discord.com/api/v9/guilds/{serverID}/members-search"
+    body = {
+        "or_query": {},
+        "and_query": {},
+        "limit": limit
+    }
+    result = requests.post(url=url, json=body, headers=HEADERS).content.decode("utf-8")
+    return json.loads(result)
+
+def pin_message(channelID, messageID):
+    url = f"https://discord.com/api/v9/channels/{channelID}/pins/{messageID}"
+    result = requests.put(url=url, headers=HEADERS).content.decode("utf-8")
+    return json.loads(result)
+
+def unpin_message(channelID, messageID):
+    url = f"https://discord.com/api/v9/channels/{channelID}/pins/{messageID}"
+    result = requests.delete(url=url, headers=HEADERS).content.decode("utf-8")
+    return json.loads(result)
+
+def get_pins(channelID):
+    url = f"https://discord.com/api/v9/channels/{channelID}/pins"
+    result = requests.get(url=url, headers=HEADERS).content.decode("utf-8")
+    return json.loads(result)
+    
